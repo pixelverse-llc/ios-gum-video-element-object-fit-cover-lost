@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>object-fit: cover not working initially with padding</title>
+    <style>
+        * {
+            margin: 0;
+        }
+        main {
+            padding: 15px;
+        }
+        video {
+            width: 100%;
+            height: 168px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+
+<main>
+    <p>Safari/iOS 17.5 Video element<br>
+        <i>object-fit: cover</i> not applied initially, depending on surrounding
+        padding (even values work, odd values don't?)
+    </p>
+    <video preload="metadata" playsinline>
+        <!-- where the video will play -->
+    </video>
+    <p>Changing padding on main element from 15px to 16px (and other values) makes it work?</p>
+    <div>
+        Workaround:
+        <button id="reapply_object_fit">Toggle object-fit</button>
+    </div>
+</main>
+
+<script>
+    const videoElement = document.getElementsByTagName('video')[0];
+    async function startCameraFeed() {
+
+        // obtain video feed from back-facing camera
+        const constraints = {
+            audio: false,
+            video: {
+                facingMode: {
+                    ideal: 'environment'
+                }
+            }
+        };
+        return navigator.mediaDevices.getUserMedia(constraints).then((mediaStream) => {
+            videoElement.onloadedmetadata = () => {
+                videoElement.play().then(() => {
+                    // just some debug logging on the video
+                    const vw = videoElement.videoWidth;
+                    const vh = videoElement.videoHeight;
+                    const aspect = vw/vh;
+                    console.debug(`Video playing, video size: ${vw} x ${vh}, aspect: ${aspect}`)
+                });
+            };
+            videoElement.srcObject = mediaStream; // triggers loading the video
+        }).catch((err) => {
+            window.alert('getUserMedia failed: ' + err);
+        });
+    }
+
+    // this "resets" the object-fit: cover on the video element
+    document.getElementById('reapply_object_fit').onclick = () => {
+        videoElement.style.objectFit = 'fill';
+        setTimeout(() => {
+            videoElement.style.objectFit = 'cover';
+        }, 50);
+    };
+    startCameraFeed();
+</script>
+
+</body>
+</html>
